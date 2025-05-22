@@ -1,0 +1,127 @@
+# ReMap Development Environment
+# This file defines all the services needed for local development
+version: '3.8'
+
+services:
+  # PostgreSQL Database (using Supabase-compatible setup)
+  database:
+    image: Supabase/postgres:latest
+    container_name: remap_db
+    restart: unless-stopped
+    environment:
+      # These values come from your .env file
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      # Persist database data between container restarts
+      - remap_db_data:/var/lib/postgresql/data
+      # Initialize database with any setup scripts
+      - ./database/init:/docker-entrypoint-initdb.d
+    networks:
+      - remap_network
+  
+  supavisor:
+    image: supabase/supavisor:latest
+    ports:
+      - "6543:6543"
+    depends_on:
+      - db
+    environment:
+      SUPERVISOR_PG_BOUNCER_PASSWORD: ${POSTGRES_PASSWORD}
+      SUPERVISOR_TENANT_ID: ${POOLER_TENANT_ID}
+    networks:
+      - remap_network
+
+  studio:
+    image: supabase/studio:latest
+    ports:
+      - "8000:3000"
+    depends_on:
+      - supavisor
+    environment:
+      SUPABASE_URL: http://localhost:8000
+      SUPABASE_PUBLIC_URL: http://localhost:8000
+      SUPABASE_ANON_KEY: ${ANON_KEY}
+      SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
+    networks:
+      - remap_network
+
+
+  # Backend API Service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: remap_backend
+    restart: unless-stopped
+    environment:
+      # Environment variables for the backend
+      NODE_ENV: development
+      PORT: 3000
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@supavisor:6543/${POSTGRES_DB}
+      JWT_SECRET: ${JWT_SECRET}
+      # Add any other environment variables your backend needs
+    ports:
+      - "3000:3000"
+    volumes:
+      # Mount the backend code for hot reloading during development
+      - ./backend:/app
+      - /app/node_modules  # Prevent node_modules from being overwritten
+    depends_on:
+      - database
+    networks:
+      - remap_network
+    # Automatically restart if the process crashes
+    command: npm run dev
+
+  # Frontend React Native Metro Bundler
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: remap_frontend
+    restart: unless-stopped
+    environment:
+      # React Native and Metro bundler configuration
+      NODE_ENV: development
+      EXPO_DEVTOOLS_LISTEN_ADDRESS: 0.0.0.0
+      REACT_NATIVE_PACKAGER_HOSTNAME: 0.0.0.0
+    ports:
+      # Metro bundler port
+      - "8081:8081"
+      # Expo development server (if using Expo)
+      - "19000:19000"
+      - "19001:19001"
+      - "19002:19002"
+    volumes:
+      # Mount frontend code for hot reloading
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - remap_network
+    command: npm start
+
+  # Optional: Adminer for database management (web-based PostgreSQL client)
+  adminer:
+    image: adminer:latest
+    container_name: remap_adminer
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    networks:
+      - remap_network
+    depends_on:
+      - database
+
+# Define named volumes for data persistence
+volumes:
+  remap_db:
+    driver: local
+
+# Create a custom network for service communication
+networks:
+  remap_network:
+    driver: bridge
