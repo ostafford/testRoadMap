@@ -5,50 +5,23 @@ version: '3.8'
 services:
   # PostgreSQL Database (using Supabase-compatible setup)
   database:
-    image: Supabase/postgres:latest
+    image: postgres:15-alpine
     container_name: remap_db
     restart: unless-stopped
     environment:
       # These values come from your .env file
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
       # Persist database data between container restarts
-      - remap_db_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
       # Initialize database with any setup scripts
       - ./database/init:/docker-entrypoint-initdb.d
     networks:
       - remap_network
-  
-  supavisor:
-    image: supabase/supavisor:latest
-    ports:
-      - "6543:6543"
-    depends_on:
-      - db
-    environment:
-      SUPERVISOR_PG_BOUNCER_PASSWORD: ${POSTGRES_PASSWORD}
-      SUPERVISOR_TENANT_ID: ${POOLER_TENANT_ID}
-    networks:
-      - remap_network
-
-  studio:
-    image: supabase/studio:latest
-    ports:
-      - "8000:3000"
-    depends_on:
-      - supavisor
-    environment:
-      SUPABASE_URL: http://localhost:8000
-      SUPABASE_PUBLIC_URL: http://localhost:8000
-      SUPABASE_ANON_KEY: ${ANON_KEY}
-      SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
-    networks:
-      - remap_network
-
 
   # Backend API Service
   backend:
@@ -61,7 +34,7 @@ services:
       # Environment variables for the backend
       NODE_ENV: development
       PORT: 3000
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@supavisor:6543/${POSTGRES_DB}
+      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@database:5432/${DB_NAME}
       JWT_SECRET: ${JWT_SECRET}
       # Add any other environment variables your backend needs
     ports:
@@ -118,7 +91,7 @@ services:
 
 # Define named volumes for data persistence
 volumes:
-  remap_db:
+  postgres_data:
     driver: local
 
 # Create a custom network for service communication
