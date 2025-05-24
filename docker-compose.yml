@@ -5,6 +5,53 @@
 version: '3.8'
 
 services:
+  # Express.js Backend Service
+  # This container runs our Node.js backend API that connects frontend to database
+  backend:
+    build:
+      context: ./backend           # Build from the backend directory
+      dockerfile: Dockerfile       # Use the Dockerfile in backend folder
+    container_name: remap-backend
+    restart: unless-stopped        # Automatically restart if container crashes
+    
+    # Port mapping exposes our API to the host machine and mobile app
+    ports:
+      - "3000:3000"               # Maps container port 3000 to host port 3000
+    
+    # Environment variables for backend configuration
+    environment:
+      # Database connection settings - these match our PostgreSQL service
+      DB_HOST: postgres           # Service name becomes hostname in Docker network
+      DB_PORT: 5432              # PostgreSQL default port
+      DB_NAME: remap_dev         # Database name from PostgreSQL service
+      DB_USER: remap_user        # Database user from PostgreSQL service  
+      DB_PASSWORD: dev_password  # Database password from PostgreSQL service
+      
+      # Node.js environment settings
+      NODE_ENV: development      # Enables development features and logging
+      PORT: 3000                # Port for Express server to listen on
+    
+    # Volume mounting allows live code editing without rebuilding container
+    volumes:
+      - ./backend:/app           # Mount backend code directory into container
+      - /app/node_modules        # Prevent overwriting node_modules in container
+    
+    # Service dependencies ensure database starts before backend
+    depends_on:
+      postgres:
+        condition: service_healthy  # Wait for database health check to pass
+    
+    # Development command with hot reloading for code changes
+    command: npm run dev
+    
+    # Health check ensures backend API is responding correctly
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s              # Check every 30 seconds
+      timeout: 10s               # Wait up to 10 seconds for response
+      retries: 5                 # Try 5 times before marking as unhealthy
+      start_period: 60s          # Wait 60 seconds before starting health checks
+
   # PostgreSQL Database Service
   # This container provides our development database that all team members will share
   postgres:
@@ -48,4 +95,3 @@ volumes:
 networks:
   default:
     name: remap-network
-    
