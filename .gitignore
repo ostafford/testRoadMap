@@ -177,3 +177,73 @@ supabase/types/
 # Local database migrations and data (optional – only if not version controlling migrations)
 supabase/migrations/
 supabase/seed.sql
+
+
+# Dependencies and Package Managers
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Environment Variables (CRITICAL - never commit these)
+.env
+.env.local
+.env.development
+.env.production
+*.env
+
+# React Native and Expo specific
+.expo/
+.expo-shared/
+dist/
+web-build/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+
+# Operating System Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE and Editor Files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+logs/
+*.log
+
+# Docker related
+docker-compose.override.yml
+.dockerignore
+
+# Database
+*.sqlite
+*.sqlite3
+*.db
+
+# Build outputs
+build/
+dist/
+out/
+
+# Coverage reports
+coverage/
+*.lcov
+
+# Temporary files
+.tmp/
+.temp/
