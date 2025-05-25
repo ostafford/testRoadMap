@@ -1,6 +1,4 @@
 // ReMap Backend Server
-// This Express.js server provides the foundation for our memory-sharing API
-// It demonstrates database connectivity and provides health monitoring
 
 const express = require('express');
 const cors = require('cors');
