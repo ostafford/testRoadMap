@@ -1,0 +1,59 @@
+{
+    "expo": {
+      "name": "ReMap",
+      "slug": "remap-memory-atlas",
+      "description": "Your Interactive Memory Atlas - Transform experiences into an interactive, personal atlas while letting you discover authentic stories from others",
+      "version": "1.0.0",
+      "orientation": "portrait",
+      "icon": "./assets/images/icon.png",
+      "scheme": "remap",
+      "userInterfaceStyle": "automatic",
+      "splash": {
+        "image": "./assets/images/splash.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#ffffff"
+      },
+      "assetBundlePatterns": [
+        "**/*"
+      ],
+      "ios": {
+        "supportsTablet": true,
+        "infoPlist": {
+          "NSLocationWhenInUseUsageDescription": "ReMap needs location access to pin your memories to specific places and help you discover stories from your current location.",
+          "NSLocationAlwaysAndWhenInUseUsageDescription": "ReMap uses your location to create an interactive memory atlas based on where your experiences happened.",
+          "NSCameraUsageDescription": "ReMap needs camera access to capture photos for your memory pins and visual storytelling.",
+          "NSPhotoLibraryUsageDescription": "ReMap needs photo library access to let you choose existing photos for your memories."
+        }
+      },
+      "android": {
+        "adaptiveIcon": {
+          "foregroundImage": "./assets/images/adaptive-icon.png",
+          "backgroundColor": "#ffffff"
+        },
+        "permissions": [
+          "ACCESS_COARSE_LOCATION",
+          "ACCESS_FINE_LOCATION",
+          "CAMERA",
+          "READ_EXTERNAL_STORAGE",
+          "WRITE_EXTERNAL_STORAGE"
+        ]
+      },
+      "web": {
+        "bundler": "metro",
+        "output": "static",
+        "favicon": "./assets/images/favicon.png"
+      },
+      "plugins": [
+        "expo-router",
+        [
+          "expo-location",
+          {
+            "locationAlwaysAndWhenInUsePermission": "Allow ReMap to use your location to create location-based memories and discover nearby stories."
+          }
+        ]
+      ],
+      "experiments": {
+        "typedRoutes": true
+      }
+    }
+  }
