@@ -34,10 +34,12 @@ services:
       PORT: 3000
       
       # Expo CLI configuration for containerized development
-      EXPO_DEVTOOLS_LISTEN_ADDRESS: 0.0.0.0  # Allow connections from outside container
-      REACT_NATIVE_PACKAGER_HOSTNAME: 0.0.0.0  # Metro bundler network binding
-      ADB_SERVER_SOCKET: tcp:host-gateway:5037  # Android Debug Bridge forwarding (this for you Nigel)
-    
+      EXPO_DEVTOOLS_LISTEN_ADDRESS: lan  # Allow connections from outside container
+      REACT_NATIVE_PACKAGER_HOSTNAME: ${HOST_IP:-host.docker.internal}  # Dynamic IP resolution
+      
+      # Android Debug Bridge configuration for mobile development
+      ADB_SERVER_SOCKET: tcp:host-gateway:5037
+      
     # Volume mounting for complete development environment
     # This provides access to the entire Git repository and project structure
     volumes:
