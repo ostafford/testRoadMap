@@ -1,5 +1,4 @@
 # Backend Dockerfile for ReMap Express.js API
-# This creates a consistent Node.js development environment for all team members
 
 # Use Node.js 22 LTS Alpine for lightweight, secure, and stable foundation
 FROM node:22-alpine
@@ -27,7 +26,7 @@ RUN addgroup -g 1001 -S nodejs && \
 COPY package*.json ./
 
 # Install dependencies with npm ci for consistent, reliable builds
-# npm ci is preferred over npm install for automated environments
+# **npm ci is preferred over npm install for automated environments**
 RUN npm install &&\
     npm cache clean --force
 

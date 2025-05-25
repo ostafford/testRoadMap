@@ -1,35 +1,32 @@
 # ReMap Development Environment
-# This docker-compose.yml creates our backend services for consistent development
-# across all team members regardless of their operating system
-
-version: '3.8'
 
 services:
   # Express.js Backend Service
-  # This container runs our Node.js backend API that connects frontend to database
   backend:
     build:
       context: ./backend           # Build from the backend directory
-      dockerfile: Dockerfile       # Use the Dockerfile in backend folder
+      dockerfile: Dockerfile       
     container_name: remap-backend
     restart: unless-stopped        # Automatically restart if container crashes
     
     # Port mapping exposes our API to the host machine and mobile app
+    # In reference to Dockerfile port needs to be the same. 
     ports:
-      - "3000:3000"               # Maps container port 3000 to host port 3000
+      - "3000:3000"               
     
     # Environment variables for backend configuration
     environment:
       # Database connection settings - these match our PostgreSQL service
-      DB_HOST: postgres           # Service name becomes hostname in Docker network
+      # DB_HOST is the service name of the PostgreSQL container that is running on the same network inside the docker network
+      DB_HOST: postgres          # Service name becomes hostname in Docker network
       DB_PORT: 5432              # PostgreSQL default port
-      DB_NAME: remap_dev         # Database name from PostgreSQL service
-      DB_USER: remap_user        # Database user from PostgreSQL service  
-      DB_PASSWORD: dev_password  # Database password from PostgreSQL service
+      DB_NAME: remap_dev         
+      DB_USER: remap_user         
+      DB_PASSWORD: dev_password  
       
       # Node.js environment settings
-      NODE_ENV: development      # Enables development features and logging
-      PORT: 3000                # Port for Express server to listen on
+      NODE_ENV: development      
+      PORT: 3000
     
     # Volume mounting allows live code editing without rebuilding container
     volumes:
@@ -39,12 +36,14 @@ services:
     # Service dependencies ensure database starts before backend
     depends_on:
       postgres:
-        condition: service_healthy  # Wait for database health check to pass
+        condition: service_healthy  # Wait for database health check to pass 
+        # Something i came across that i thought would be useful to know and have (https://docs.docker.com/compose/how-tos/startup-order/#:~:text=its%20SQL%20statements.-,Control%20startup,-On%20startup%2C%20Compose)
     
     # Development command with hot reloading for code changes
     command: npm run dev
     
     # Health check ensures backend API is responding correctly
+    # reference (https://docs.docker.com/compose/how-tos/startup-order/#:~:text=a%20dependent%20service.-,Example,-services%3A)
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
       interval: 30s              # Check every 30 seconds
@@ -53,7 +52,7 @@ services:
       start_period: 60s          # Wait 60 seconds before starting health checks
 
   # PostgreSQL Database Service
-  # This container provides our development database that all team members will share
+  # This container provides our development database that all of us will share
   postgres:
     image: postgres:17-alpine    # Using PostgreSQL 17 with lightweight Alpine Linux
     container_name: remap-postgres
@@ -62,22 +61,23 @@ services:
     # Environment variables configure the database
     environment:
       # These create the initial database and user credentials
-      POSTGRES_DB: remap_dev          # Name of the database for our app
-      POSTGRES_USER: remap_user       # Database username for our application
-      POSTGRES_PASSWORD: dev_password # Password (this is for development only!)
+      POSTGRES_DB: remap_dev          
+      POSTGRES_USER: remap_user       
+      POSTGRES_PASSWORD: dev_password 
       POSTGRES_HOST_AUTH_METHOD: md5  # Authentication method for connections
     
     # Port mapping allows access from host machine and other containers
     ports:
-      - "5432:5432"    # Maps container port 5432 to host port 5432
+      - "5432:5432"
     
     # Volume ensures database data persists when container restarts
     volumes:
       - postgres_data:/var/lib/postgresql/data    # Named volume for data persistence
-      # Note: We'll add initialization scripts later when we need them
+      # Note for future me: We'll add initialization scripts later when we need them
     
     # Health check ensures database is ready before other services start
     healthcheck:
+    # reference (https://docs.docker.com/compose/how-tos/startup-order/#:~:text=a%20dependent%20service.-,Example,-services%3A)
       test: ["CMD-SHELL", "pg_isready -U remap_user -d remap_dev"]
       interval: 30s      # Check every 30 seconds
       timeout: 10s       # Wait up to 10 seconds for response
