@@ -3,8 +3,9 @@ import { Text, View, StyleSheet } from 'react-native';
 export default function IndexScreen() {
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>ReMap Development Test</Text>
-      <Text style={styles.subtitle}>Expo Router is working!</Text>
+      <Text style={styles.text}>🗺️ ReMap</Text>
+      <Text style={styles.subtitle}>Your Interactive Memory Atlas</Text>
+      <Text style={styles.status}>✅ Basic setup working!</Text>
     </View>
   );
 }
@@ -12,18 +13,26 @@ export default function IndexScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#25292e',
+    backgroundColor: '#F8FAFC',
     alignItems: 'center',
     justifyContent: 'center',
+    padding: 20,
   },
   text: {
-    color: '#fff',
-    fontSize: 24,
+    color: '#1F2937',
+    fontSize: 28,
     fontWeight: 'bold',
+    marginBottom: 8,
   },
   subtitle: {
-    color: '#fff',
+    color: '#6B7280',
     fontSize: 16,
-    marginTop: 8,
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  status: {
+    color: '#10B981',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
