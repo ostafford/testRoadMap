@@ -1,14 +1,11 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 export default function ExploreScreen() {
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>🧭 Explore Memories</Text>
+      <Text style={styles.title}>🧭 Explore Memories</Text>
       <Text style={styles.subtitle}>Discover authentic stories from others</Text>
-      <Text style={styles.description}>
-        This screen will contain the memory discovery interface where users can 
-        explore location-based stories and experiences shared by other ReMap users.
-      </Text>
+      <Text style={styles.status}>✅ Memory discovery features coming soon!</Text>
     </View>
   );
 }
@@ -16,12 +13,12 @@ export default function ExploreScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    justifyContent: 'center',
     backgroundColor: '#F8FAFC',
+    padding: 20,
   },
-  text: {
+  title: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#1F2937',
@@ -33,10 +30,9 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     textAlign: 'center',
   },
-  description: {
+  status: {
     fontSize: 14,
-    color: '#4B5563',
-    textAlign: 'center',
-    lineHeight: 20,
+    color: '#10B981',
+    fontWeight: '600',
   },
 });

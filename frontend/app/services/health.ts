@@ -5,25 +5,48 @@
  * containerized backend services. It provides comprehensive system health
  * monitoring that verifies all components of the ReMap development environment
  * are functioning correctly.
- * 
- * The service showcases several important patterns:
- * - HTTP client configuration for API communication
- * - Error handling strategies for network operations
- * - TypeScript interfaces for type-safe API responses
- * - Timeout management for reliable mobile networking
- * - Retry logic for handling transient network issues
  */
 
-// Configuration for API communication
-// In development, this points to your containerized backend services
-// The localhost address works because Expo CLI creates a bridge between
-// your mobile device and your development machine's network
-const API_BASE_URL = 'http://localhost:3000';
+// Configuration for API communication - Dynamic IP Detection
+// This automatically detects the correct IP address for mobile device connections
+
+const getApiBaseUrl = (): string => {
+    // In React Native, we can access Expo's debugging information
+    // The Metro bundler URL contains the correct IP address
+    if (typeof global !== 'undefined' && global.__DEV__) {
+      try {
+        // Try to extract IP from Metro's source maps URL or other debugging info
+        // This is a common pattern in React Native development
+        const metroUrl = global.__METRO_ORIGIN__;
+        if (metroUrl) {
+          const url = new URL(metroUrl);
+          return `http://${url.hostname}:3000`;
+        }
+      } catch (error) {
+        console.log('[HealthService] Could not extract IP from Metro URL:', error);
+      }
+    }
+  
+    // Fallback: Try to detect from the current networking context
+    // In Expo managed workflow, we can sometimes access this information
+    if (typeof window !== 'undefined' && window.location && window.location.hostname !== 'localhost') {
+      return `http://${window.location.hostname}:3000`;
+    }
+  
+    // Final fallback - this will need to be manually configured
+    console.warn('[HealthService] Using localhost fallback - mobile devices may not connect');
+    return 'http://localhost:3000';
+  };
+  
+  const API_BASE_URL = getApiBaseUrl();
+  
+  // Log the detected URL for debugging
+  console.log('[HealthService] Using API Base URL:', API_BASE_URL);
+  
 
 /**
  * Type definitions for health check responses
  * These interfaces ensure type safety between frontend and backend
- * and serve as documentation for the API contract
  */
 export interface BackendHealthResponse {
   status: 'healthy' | 'unhealthy';
@@ -46,11 +69,7 @@ export interface HealthCheckResult {
 }
 
 /**
- * HTTP Client Configuration
- * 
- * This class encapsulates all the networking logic needed to communicate
- * with your backend services. It handles timeouts, error processing,
- * and response parsing in a way that's optimized for mobile network conditions.
+ * HTTP Client for Backend Communication
  */
 class HealthMonitorClient {
   private readonly baseUrl: string;
@@ -63,12 +82,6 @@ class HealthMonitorClient {
 
   /**
    * Generic HTTP request method with comprehensive error handling
-   * 
-   * This method demonstrates best practices for mobile HTTP requests:
-   * - Timeout management for unreliable network conditions
-   * - Detailed error categorization for better user feedback
-   * - Request/response logging for development debugging
-   * - Proper cleanup of network resources
    */
   private async makeRequest<T>(
     endpoint: string,
@@ -94,15 +107,12 @@ class HealthMonitorClient {
         },
       });
 
-      // Clear timeout since request completed
       clearTimeout(timeoutId);
 
-      // Check if response indicates success
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      // Parse JSON response with error handling
       const data = await response.json();
       console.log(`[HealthMonitor] Response received:`, data);
       
@@ -110,7 +120,6 @@ class HealthMonitorClient {
     } catch (error) {
       clearTimeout(timeoutId);
       
-      // Categorize different types of errors for better user feedback
       if (error instanceof Error) {
         if (error.name === 'AbortError') {
           throw new Error('Request timeout - check your network connection');
@@ -119,29 +128,21 @@ class HealthMonitorClient {
         }
       }
       
-      // Re-throw the error with additional context
       throw error;
     }
   }
 
   /**
    * Check backend API health and database connectivity
-   * 
-   * This method demonstrates how to verify that your containerized backend
-   * services are accessible from the React Native application and functioning
-   * correctly. It tests the complete data flow from mobile app through API
-   * to database and back.
    */
   async checkBackendHealth(): Promise<HealthCheckResult> {
     try {
       const healthData = await this.makeRequest<BackendHealthResponse>('/health');
 
-      // Validate response structure to ensure API contract compliance
       if (!healthData.status || !healthData.database) {
         throw new Error('Invalid health check response format');
       }
 
-      // Determine overall health status based on backend response
       const isHealthy = healthData.status === 'healthy' && healthData.database.connected;
 
       return {
@@ -170,14 +171,9 @@ class HealthMonitorClient {
 
   /**
    * Test database integration through backend API
-   * 
-   * This method verifies that the complete data flow from React Native
-   * through Express.js to PostgreSQL is functioning correctly. It demonstrates
-   * how to test integrated functionality rather than just individual components.
    */
   async checkDatabaseIntegration(): Promise<HealthCheckResult> {
     try {
-      // Test a backend endpoint that requires database access
       const response = await this.makeRequest('/api/memories');
 
       return {
@@ -198,12 +194,7 @@ class HealthMonitorClient {
   }
 
   /**
-   * Verify API endpoint availability and response format
-   * 
-   * This method tests the basic API functionality that your React Native
-   * components will depend on throughout the application. It verifies that
-   * the backend services are not just running, but responding correctly
-   * to the types of requests your mobile app will make.
+   * Verify API endpoint availability
    */
   async checkApiEndpoints(): Promise<HealthCheckResult> {
     try {
@@ -262,23 +253,16 @@ class HealthMonitorClient {
 
 /**
  * Singleton instance of the health monitor client
- * 
- * This provides a convenient way for React Native components to access
- * health monitoring functionality without needing to manage client instances
  */
 export const healthMonitorClient = new HealthMonitorClient();
 
 /**
  * Convenience function for running comprehensive health checks
- * 
- * This function demonstrates how to coordinate multiple asynchronous operations
- * and provide comprehensive system status information to React Native components
  */
 export async function runComprehensiveHealthCheck(): Promise<HealthCheckResult[]> {
   try {
     console.log('[HealthMonitor] Starting comprehensive health check...');
     
-    // Run all health checks concurrently for better performance
     const [backendCheck, databaseCheck, apiCheck] = await Promise.all([
       healthMonitorClient.checkBackendHealth(),
       healthMonitorClient.checkDatabaseIntegration(),
@@ -294,10 +278,4 @@ export async function runComprehensiveHealthCheck(): Promise<HealthCheckResult[]
   }
 }
 
-/**
- * Export the health monitor client for use in React Native components
- * 
- * This enables components to perform individual health checks or access
- * specific backend integration functionality as needed
- */
 export default healthMonitorClient;

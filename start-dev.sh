@@ -88,7 +88,7 @@ echo ""
 
 # Execute the Expo startup inside the container with proper environment
 docker exec -it remap-backend bash -c "
-    cd /workspace/remap-fresh && 
+    cd /workspace/frontend && 
     export REACT_NATIVE_PACKAGER_HOSTNAME=$HOST_IP && 
     export EXPO_DEVTOOLS_LISTEN_ADDRESS=0.0.0.0 && 
     npm start
